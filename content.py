@@ -6,6 +6,7 @@ from telegram import (
 
 from constants import *
 
+get_link = lambda x: f'https://docs.google.com/spreadsheets/d/{x}/export?format=csv'
 
 class Question: 
     def __init__(self, data: pd.Series): 
