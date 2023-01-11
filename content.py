@@ -10,7 +10,7 @@ get_link = lambda x: f'https://docs.google.com/spreadsheets/d/{x}/export?format=
 
 class Question: 
     def __init__(self, data: pd.Series): 
-        self.number = data['number']
+        # self.number = data['number']
         self.pos = data['pos_callback']
         self.neg = data['neg_callback']
         self.ns = data['ns_callback']
@@ -61,24 +61,39 @@ class Quiz:
 
 
 class TextManager: 
-    def __init__(self, link: str):
+    def __init__(self, link: str, if_article: bool = False):
         self.data: pd.DataFrame = pd.read_csv(get_link(link))
-        self.texts = self.parse_texts()
+        self.texts: dict = self.parse('text')
 
+        if if_article: 
+            self.titles: dict = self.parse('title')
 
-    def parse_texts(self): 
+    def parse(self, attribute): 
         length: int = self.data.shape[0]
-        texts: dict = {}
+        parsed_properties: dict = {}
 
         for i in range(length): 
             text_series = self.data.iloc[i]
-            texts[text_series['id']] = text_series['text']
+            parsed_properties[text_series['id']] = text_series[attribute]
 
-        return texts 
+        return parsed_properties 
 
     def get_text(self, id: str): 
         return self.texts[id]
 
+    def get_title(self, id: str): 
+        return self.titles[id]
 
-lib = TextManager(TEXT_SHEET)
-quiz = Quiz(QUIZ_SHEET)
+    def get_reply_markup(self): 
+        buttons = [[InlineKeyboardButton(text='Вернуться в меню', callback_data='menu')]]
+        for callback, title in self.titles.items(): 
+            new_button = InlineKeyboardButton(text=title, callback_data=callback)
+            buttons = [[new_button]] + buttons
+
+        keyboard = InlineKeyboardMarkup(buttons)
+
+        return keyboard
+
+
+lib = TextManager(TEXT_SHEET, if_article=False)
+articles = TextManager(ARTICLE_SHEET, if_article=True)
